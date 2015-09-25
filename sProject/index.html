@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="form.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+    loadData();
+    getData();
+});
+
+//load county list for selection 
+var loadData = function() { 
+    $.ajax({ 
+	type:	  'POST',
+        url:	  'getcountylist.php', 
+        dataType: 'json', 
+	success:  function(response) { 
+	    if(jQuery.isEmptyObject(response)) { 
+                $('#countylist').append('no data');
+	    }
+	    else {
+	        var selectdata = '<select multiple="multiple" id="county" name="county" size="10">';
+                for (var i in response) {
+                    selectdata += '<option value="' + response[i].county + '">' + response[i].county + '</option>' ;
+                }
+	        selectdata += '</select>';
+                $('#countylist').append(selectdata);
+	    }
+	},
+	error: function (request, status, error) {
+		//alert(request.responseText);
+                $('#dataresult').append('error: database error');
+	}
+    })
+};
+
+//return data based on year and counties 
+var getData = function() { 
+    $('#myform').submit(function(e) {
+	if ($('#county :selected').length > 0 && $('#year').val() !='' ) {
+	    var selectedcounties = [];
+	    $('#county :selected').each(function(i, selected) { 
+		selectedcounties[i] = $(selected).val();
+	    }); 
+	    var formData = { 
+		'county' : selectedcounties,
+		'year' : $('#year').val()
+	    };
+	    //	    $('#dataresult').html("oops no fetch result.");	
+	    $.ajax({ 
+	        type:	'POST',
+                url:	'getresult.php', // JQuery loads serverside php
+                data: 	formData,
+	        dataType:	'json',
+	        encode:	true,
+    	    })
+	    .done(function(data, textStatus, jqXHR){ 
+	        if(jQuery.isEmptyObject(data)) { 
+	    	    $('#dataresult').html("oops no fetch result.");	
+		} 
+		else { 
+		    drawResult(data, $('#year').val());
+		} 
+	    });
+	    //e.preventDefault();
+        }
+	else { 
+	    $('#dataresult').html("oops, please select a county and enter a year.");	
+        }
+	e.preventDefault();
+    });
+};
+
+//display data in html format
+function drawResult(data, year) { 
+    $('#dataresult').empty();	
+    var tr; 
+    tr = $('<tr/>'); 
+    tr.append('<th>State</th><th>County</th><th class="subp">' + year + '</th><th class="subp">Total</th>');
+    $('#dataresult').append(tr);	
+    for (var i in data) { 
+        var numofrow = data[i].length; 
+ 	var total = 0 ; 
+	for(var j = 0; j < numofrow; j++) { 
+		total += (data[i][j]['population'])*1;
+	}
+	if (numofrow != 1 ) { 
+	    tr = $('<tr/>'); 
+	    tr.append('<td rowspan="' + numofrow + '">' + i + '</td>');
+	    tr.append('<td>' + data[i][0]['county'] + '</td>');
+	    tr.append('<td class="subp">' + data[i][0]['population'] + '</td>');
+	    tr.append('<td class="subp" rowspan="' + numofrow + '">' + total + '</td>');
+	    $('#dataresult').append(tr);	
+	    for(var j = 1; j < numofrow; j++) { 
+	        tr = $('<tr/>'); 
+	        tr.append('<td>' + data[i][j]['county'] + '</td>');
+	        tr.append('<td class="subp">' + data[i][j]['population'] + '</td>');
+	        $('#dataresult').append(tr);	
+	    }
+	} 
+	else { 
+	    tr = $('<tr/>'); 
+	    tr.append('<td>' + i + '</td><td>' + data[i][0]['county'] + '</td>');
+	    tr.append('<td class="subp">' + data[i][0]['population'] + '</td>');
+	    tr.append('<td class="subp">' + total + '</td>');
+	    $('#dataresult').append(tr);	
+   	}
+    }
+}
+</script>
+</head>
+
+<body>
+<form method="post" id="myform" name="myform" action="">
+<p>
+    <label for="County">County: </label>
+    <div id="countylist"></div>
+</p>
+
+<p>
+    <label for="Year">Year:</label>
+    <input type="text" name="year" id="year" size="4" maxlength="4" required="required">
+</p>
+
+<p>
+    <input type="submit" name="submit" value="Fetch">
+    <input type="reset" name="reset" value="Reset">
+</p>
+</form>
+
+<table>
+<div id="dataresult"></div>
+</table>
+
+</body>
+</html>

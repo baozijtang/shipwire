@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="form.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+    BeaconEncoder();
+});
+
+var BeaconEncoder = (function () {
+    function BeaconEncoder() {
+
+    }
+
+    BeaconEncoder.prototype.encode = function (data) {
+	//var b; 
+	//foreach (var i in data) {  	
+ 	//	b += i + ' ' ; 
+	//}
+	console.log(data);
+	return data;
+    };
+
+    return BeaconEncoder;
+
+})();
+
+
+var encoder = new BeaconEncoder();
+
+
+var fieldValues = { 
+	"name1" : "value1",
+	"name2" : "value2",
+}
+
+var result = encoder.encode(fieldValues);
+alert(result);
+// result is now ”name1=value1&name2=value2”
+
+
+</script>
+</head>
+
+<body>
+<table>
+</table>
+</body>
+</html>
